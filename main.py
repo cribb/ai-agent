@@ -36,11 +36,13 @@ def main():
     print("Hello from ai-agent!")
     print(f"\nResponse from gemini:\n {response.text}")
 
-    X = response.usage_metadata.prompt_token_count
-    Y = response.usage_metadata.candidates_token_count
+    pcount = response.usage_metadata.prompt_token_count
+    tcount = response.usage_metadata.candidates_token_count
 
-    print(f"Prompt tokens: {X}")
-    print(F"Response tokens: {Y}")
+    if "--verbose" in sys.argv:
+        print(f"User prompt: {prompt}")
+        print(f"Prompt tokens: {pcount}")
+        print(F"Response tokens: {tcount}")
 
 
 if __name__ == "__main__":
