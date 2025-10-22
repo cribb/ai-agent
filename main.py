@@ -2,6 +2,7 @@ import os
 import sys
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 
 def main():
@@ -24,9 +25,13 @@ def main():
         print('example: "WTF does \'skibidi\' mean?"\n') 
         return sys.exit(1)
 
+    model='gemini-2.0-flash-001'
+    messages = [
+        types.Content(role="user", parts=[types.Part(text=prompt)]),
+    ]
 
-    response = client.models.generate_content(model='gemini-2.0-flash-001',
-                                              contents=prompt)
+    response = client.models.generate_content(model=model,
+                                              contents=messages)
 
     print("Hello from ai-agent!")
     print(f"\nResponse from gemini:\n {response.text}")
