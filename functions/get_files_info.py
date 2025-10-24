@@ -1,4 +1,20 @@
 import os
+from google.genai import types
+
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in the specified directory along with their sizes, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="The directory to list files from, relative to the working directory. If not provided, lists files in the working directory itself.",
+            ),
+        },
+    ),
+)
+
 
 def get_files_info(working_directory, directory="."):
 
@@ -12,7 +28,6 @@ def get_files_info(working_directory, directory="."):
     # print(f'Checking path: {subpath}')
 
     in_bounds = subpath.startswith(workpath)
-    # print(f'in_bounds: {in_bounds}')
 
     if not in_bounds:
         err_str = f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
@@ -25,7 +40,6 @@ def get_files_info(working_directory, directory="."):
         return err_str
     
     filelist = os.listdir(path=subpath)
-    # print(f"filelist: {filelist}")
 
     # Tailor the output to match what's in boot.dev's spec...
     if subpath == workpath:

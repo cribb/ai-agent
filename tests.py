@@ -39,33 +39,22 @@ from functions.run_python_file import run_python_file
 # status = write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
 # print(status)
 
-print("---------------------------------")
-print("\nRunning tests for run_python_file...")
-print("---------------------------------")
-# Test 1 should return should print the calculator's usage instructions
-# Test 2 should run the calculator... which gives a kinda nasty rendered result)
-# Tests 3,4,5 should return an error
-test_cases_rpf = [ ('calculator', 'main.py', ''), 
-                   ('calculator', 'main.py', ["3 + 5"]),
-                   ('calculator', 'tests.py', ''),
-                   ('calculator', '../main.py', ''),
-                   ('calculator', 'nonexistent.py', ''),
-                   ('calculator', 'lorem.txt', '') ] 
 
-for test in test_cases_rpf:
-    status = run_python_file(*test)
-    print(status)
-    print('-------------')
+# # Test 1 should return should print the calculator's usage instructions
+# # Test 2 should run the calculator... which gives a kinda nasty rendered result)
+# # Tests 3,4,5 should return an error
+# print("---------------------------------")
+# print("\nRunning tests for run_python_file...")
+# print("---------------------------------")
+# test_cases_rpf = [ ('calculator', 'main.py', ''), 
+#                    ('calculator', 'main.py', ["3 + 5"]),
+#                    ('calculator', 'tests.py', ''),
+#                    ('calculator', '../main.py', ''),
+#                    ('calculator', 'nonexistent.py', ''),
+#                    ('calculator', 'lorem.txt', '') ] 
 
-# working_directory = ['calculator','calculator','calculator','calculator','calculator','calculator']
-# file_path = ['main.py','main.py','tests.py','../main.py','nonexistent.py','lorem.txt']
-# myargs = [[], ["3 + 5"], '', '', '', '']
-# for i in range(0,len(working_directory)):
-#     status = run_python_file(working_directory[i], file_path[i], myargs[i]) # should print the calculator's usage instructions
+# for test in test_cases_rpf:
+#     status = run_python_file(*test)
 #     print(status)
+#     print('-------------')
 
-# status = run_python_file("calculator", "main.py", ["3 + 5"]) 
-# status = run_python_file("calculator", "tests.py")
-# status = run_python_file("calculator", "../main.py") 
-# status = run_python_file("calculator", "nonexistent.py") # this should return an error
-# status = run_python_file("calculator", "lorem.txt") # this should return an error
