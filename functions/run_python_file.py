@@ -1,8 +1,27 @@
 import os
 import sys
 import subprocess
+from google.genai import types
 
-AITIMEOUT = 3
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs python code, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file containing python code to be ran, constrained to the working directory.",
+            ),
+            "args": types.Schema(
+                type=types.Type.STRING,
+                description="The arguments to pass to 'file_path'",
+            ),
+        },
+    ),
+)
+
+AITIMEOUT = 30
 
 def run_python_file(working_directory, file_path, args=[]):
     workpath = os.path.abspath(working_directory)
@@ -38,15 +57,19 @@ def run_python_file(working_directory, file_path, args=[]):
     stdo = process_output.stdout.decode("utf-8")
     stde = process_output.stderr.decode("utf-8")
 
-    if len(stdo) == 0:
-        return "No output produced."
-    
     output = ''
-    output += f"STDOUT: {stdo}"
-    output += f"STDERR: {stde}"
+    if len(stdo)>0:
+        output += f"STDOUT: {stdo}\n"
+    if len(stde)>0:
+        output += f"STDERR: {stde}\n"
+
+    # print(f"Output: {output}")
 
     exit_code = process_output.returncode
     if not exit_code == 0:
         output += f"Process exited with code {exit_code}"
+
+    if len(output) == 0:
+        return "No output produced."
 
     return output
