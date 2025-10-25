@@ -2,6 +2,8 @@ import os
 import sys
 import subprocess
 from google.genai import types
+from config import AI_TIMEOUT
+
 
 schema_run_python_file = types.FunctionDeclaration(
     name="run_python_file",
@@ -21,7 +23,6 @@ schema_run_python_file = types.FunctionDeclaration(
     ),
 )
 
-AITIMEOUT = 30
 
 def run_python_file(working_directory, file_path, args=[]):
     workpath = os.path.abspath(working_directory)
@@ -50,7 +51,7 @@ def run_python_file(working_directory, file_path, args=[]):
     cmd = [sys.executable, filename, *args]
     # print(f"cmd= {cmd}")
     try: 
-        process_output = subprocess.run(cmd, cwd=workpath, capture_output=True, timeout=AITIMEOUT)
+        process_output = subprocess.run(cmd, cwd=workpath, capture_output=True, timeout=AI_TIMEOUT)
     except Exception as e:
         return f"Error: executing Python file: {e}"
     
