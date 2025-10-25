@@ -1,14 +1,12 @@
 import os
 import sys
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from functions.get_files_info import schema_get_files_info
-from functions.get_file_content import schema_get_file_content
-from functions.run_python_file import schema_run_python_file
-from functions.write_file import schema_write_file
-from functions.call_function import call_function
 
+from functions.call_function import call_function, available_functions
+from config import MAX_AI_ITERATIONS, SYSTEM_PROMPT, MODEL_NAME
 
 
 def main():
@@ -31,71 +29,74 @@ def main():
         print('example: "WTF does \'skibidi\' mean?"\n') 
         return sys.exit(1)
 
-    model_name='gemini-2.0-flash-001'
+    
+    verbose = "--verbose" in sys.argv
 
     messages = [
         types.Content(role="user", parts=[types.Part(text=prompt)]),
     ]
+    
+    gemini_meat()
 
-    system_prompt = """
-        You are a helpful AI coding agent.
-
-        When a user asks a question or makes a request, make a function call plan. You can perform the following operations:
-
-        - List files and directories
-        - Read file contents
-        - Execute Python files with optional arguments
-        - Write or overwrite files
-
-        All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
-        """
-
-    # print(f" --> schema_get_files_info: {schema_get_files_info}")
-
-    available_functions = types.Tool(
-        function_declarations=[
-            schema_get_files_info,
-            schema_get_file_content,
-            schema_run_python_file,
-            schema_write_file
-        ]
-    )
-
+    # The meat of the interaction with Gemini:
+    # First, configure it...
     ai_config = types.GenerateContentConfig(tools=[available_functions], 
-                                            system_instruction=system_prompt)
+                                            system_instruction=SYSTEM_PROMPT)
 
-    response = client.models.generate_content(model=model_name,
+    # Then, submit the query to Gemini and [wait for|return] the content it generates
+    response = client.models.generate_content(model=MODEL_NAME,
                                               contents=messages,
                                               config=ai_config)
-
     
-    func_calls = response.function_calls
-    verbose = "--verbose" in sys.argv
+    # Spam console with content if we're being chatty
     print("---- ai-agent ----")
-    if len(func_calls):
-        for part in func_calls:
-            result = call_function(part, verbose)
-            func_response = result.parts[0].function_response.response
-            if not func_response:
-                raise Exception("Function call did not return expected response.")
-            if verbose:
-                print(f"-> {func_response.get('result', func_response)}")
-    # else:
-    #     text_out = response.text
-    #     # report += f"\nResponse from gemini:\n {text_out}"
-
-    pcount = response.usage_metadata.prompt_token_count
-    tcount = response.usage_metadata.candidates_token_count
-
     if verbose:
         print(f"User prompt: {prompt}")
-        print(f"Prompt tokens: {pcount}")
-        print(F"Response tokens: {tcount}")
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(F"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    # Add the response to the "conversation" stored in messages (for feedback)
+    # candidates = response.candidates
+    if response.candidates:
+        count = 1
+        for candidate in response.candidates:
+            if verbose:
+                print(f"Candidate {count}:\n ")
+                print(f"--> contents: {candidate.content},\n")
+            messages.append(candidate.content)
+            count += 1
+
+    # Examine the response(s).
+    func_calls = response.function_calls
+
+    # If the agent has made no function calls, return its text response
+    if not func_calls:
+        return response.text
+
+    # Process functions that were run...
+    func_responses = []
+    for part in func_calls:
+        result = call_function(part, verbose)
+
+        print(f"result.parts[0] --> {result.parts[0]}")
+        print(f"result.parts[0].function_response.response---> {result.parts[0].function_response.response} ")
         
+        func_response = result.parts[0].function_response.response
 
-    # print(report)
+        if not result.parts or not func_response:
+            raise Exception("Function call did not return expected response.")            
+        # user_message = types.Content        
+        if verbose:
+            print(f"-> {func_response.get('result', func_response)}")
+        func_responses.append(func_response)
+        
+    if not func_responses:
+        raise Exception('No function responses generated by Gemini, exiting...')
+    
+    return func_responses
 
-    return func_response
+def gemini_meat():
+    pass    
 
 if __name__ == "__main__":
     main()
